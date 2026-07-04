@@ -1,38 +1,37 @@
-const jwt=require("jsonwebtoken");
-const restaurantModel=require("../models/restaurant.model");
-const userModel=require("../models/user.model");
+const jwt = require("jsonwebtoken");
+const restaurantModel = require("../models/restaurant.model");
+const userModel = require("../models/user.model");
 
-async function addRestaurant(req,res) {
-    const token=req.cookies.token;
-    if(!token){
-        return res.status(401).json({
-            message:"Unauthorized access"
-        })
-    }
-
-    let decoded=null;
-    try{
-        decoded=jwt.verify(token,process.env.JWT_SECRET);
-
-    }catch(err){
-        return res.status(401).json({
-            message:"User not authorized(wrong token)"
-        })
-    }
-
-    const user=await userModel.findById(decoded.id);
-    if (!user) {
-    return res.status(404).json({
-        message: "User not found"
+async function addRestaurant(req, res) {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({
+      message: "Unauthorized access",
     });
-}
-    if(user.role!=="business"){
-        return res.status(403).json({
-            message:"Only business accounts can add restaurants"
-        })
-    }
+  }
 
-    const {
+  let decoded = null;
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    return res.status(401).json({
+      message: "User not authorized(wrong token)",
+    });
+  }
+
+  const user = await userModel.findById(decoded.id);
+  if (!user) {
+    return res.status(404).json({
+      message: "User not found",
+    });
+  }
+  if (user.role !== "business") {
+    return res.status(403).json({
+      message: "Only business accounts can add restaurants",
+    });
+  }
+
+  const {
     name,
     description,
     address,
@@ -41,10 +40,10 @@ async function addRestaurant(req,res) {
     openingTime,
     closingTime,
     deliveryTime,
-    categories
-} = req.body;
+    categories,
+  } = req.body;
 
-    const restaurant = await restaurantModel.create({
+  const restaurant = await restaurantModel.create({
     name,
     description,
     owner: user._id,
@@ -54,62 +53,162 @@ async function addRestaurant(req,res) {
     openingTime,
     closingTime,
     deliveryTime,
-    categories
-});
+    categories,
+  });
 
-return res.status(201).json({
-    message:"Restaurant added successfully",
-    restaurant
-})
-    
-
-
+  return res.status(201).json({
+    message: "Restaurant added successfully",
+    restaurant,
+  });
 }
-async function getRestaurants(req,res){
-
+async function getRestaurants(req, res) {
   try {
     const restaurants = await restaurantModel.find();
 
     return res.status(200).json({
-        message: "Restaurants fetched successfully",
-        restaurants
+      message: "Restaurants fetched successfully",
+      restaurants,
     });
-
-} catch (err) {
+  } catch (err) {
     return res.status(500).json({
-        message: err.message
+      message: err.message,
     });
-}
+  }
 }
 
-async function getRestaurantById(req,res) {
-    const {id}=req.params;
-    try{
-    const restaurant=await restaurantModel.findById(id);
+async function getRestaurantById(req, res) {
+  const { id } = req.params;
+  try {
+    const restaurant = await restaurantModel.findById(id);
     if (!restaurant) {
+      return res.status(404).json({
+        message: "Restaurant not found",
+      });
+    }
+    return res.status(200).json({
+      message: "Restaurant details fetched successfully",
+      restaurant,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      message: err.message,
+    });
+  }
+}
+
+async function updateRestaurant(req, res) {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({
+      message: "Unauthorized access",
+    });
+  }
+
+  let decoded = null;
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    return res.status(401).json({
+      message: "User not authorized(wrong token)",
+    });
+  }
+
+  const user = await userModel.findById(decoded.id);
+  if (!user) {
+    return res.status(404).json({
+      message: "User not found",
+    });
+  }
+
+  if (user.role !== "business") {
+    return res.status(403).json({
+      message: "Only business accounts can edit restaurants",
+    });
+  }
+  const { id } = req.params;
+  const restaurant = await restaurantModel.findById(id);
+  if (!restaurant) {
+    return res.status(404).json({
+      message: "Restaurant not found",
+    });
+  }
+  if (restaurant.owner.toString() !== user._id.toString()) {
+    return res.status(403).json({
+      message: "You are not allowed to update this restaurant",
+    });
+  }
+
+  const updatedRestaurant = await restaurantModel.findByIdAndUpdate(
+    id,
+    req.body,
+    {
+      returnDocument: "after",
+      runValidators: true,
+    },
+  );
+
+  return res.status(200).json({
+    message: "Restaurant updated successfully",
+    updatedRestaurant,
+  });
+}
+
+async function deleteRestaurant(req, res) {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(401).json({
+      message: "Unauthorized access",
+    });
+  }
+
+  let decoded = null;
+  try {
+     decoded = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    return res.status(401).json({
+      message: "Unauthorized access(invalid token)",
+    });
+  }
+
+  const user = await userModel.findById(decoded.id);
+  if (!user) {
+    return res.status(404).json({
+      message: "User not found",
+    });
+  }
+
+  if (user.role !== "business") {
+    return res.status(403).json({
+      message: "Only business accounts can delete restaurants",
+    });
+  }
+
+  const { id } = req.params;
+  const restaurant = await restaurantModel.findById(id);
+
+  if (!restaurant) {
     return res.status(404).json({
         message: "Restaurant not found"
     });
 }
-    return res.status(200).json({
-        message:"Restaurant details fetched successfully",
-        restaurant
-    })
 
-    } catch(err){
-        
-            return res.status(500).json({
-                message:err.message
-            });
-        
-    }
-    
-    
+  if (restaurant.owner.toString() !== user._id.toString()) {
+    return res.status(403).json({
+      message: "You are not allowed to update this restaurant",
+    });
+  }
+
+  await restaurant.deleteOne();
+  return res.status(200).json({
+    message:"Restaurant deleted successfully"
+  });
+
 }
 
-module.exports={
-    addRestaurant,
-    getRestaurants,
-    getRestaurantById
-    
-}
+module.exports = {
+  addRestaurant,
+  getRestaurants,
+  getRestaurantById,
+  updateRestaurant,
+  deleteRestaurant
+};
