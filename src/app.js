@@ -7,4 +7,5 @@ app.use(cookieParser());
 app.use(express.json());
 app.use('/api/auth',authRouter);
 app.use('/api/restaurants',restaurantRouter);
+
 module.exports=app;
