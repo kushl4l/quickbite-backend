@@ -4,6 +4,7 @@ const jwt=require("jsonwebtoken");
 
 
 async function signUp(req,res){
+    try{
 const {name,email,password,address,role,phone_no}=req.body;
 const existingUser= await userModel.findOne({
     email
@@ -44,6 +45,11 @@ res.status(201).json({
         address:user.address
     }
 })
+    }catch(err){
+        return res.status(500).json({
+            message:err.message
+        })
+    }
 
 };
 
