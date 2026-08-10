@@ -35,11 +35,6 @@ const restaurantSchema=new mongoose.Schema({
         required:[true,"Field is required"]
     },
 
-    isOpen:{
-        type:Boolean,
-        default:true
-        
-    },
 
     deliveryTime:{
         type:Number,

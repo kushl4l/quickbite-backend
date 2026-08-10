@@ -1,5 +1,5 @@
 const cartModel = require("../models/cart.model");
-const foodModel=require("../models/cart.model");
+
 const orderModel = require("../models/order.model");
 const restaurantModel= require("../models/restaurant.model");
 
@@ -10,7 +10,7 @@ async function placeOrder(req,res) {
     const user=req.user;
     const cart= await cartModel.findOne({
         user:user._id
-    }).populate("items.food","_id name price quantity");
+    }).populate("items.food", "_id name price");
 
     if(!cart){
         return res.status(404).json({
@@ -19,7 +19,13 @@ async function placeOrder(req,res) {
     }
 
     const orderItems=[];
-    let totalAmount=0;
+    let totalAmount = 0;
+    const deliveryFee = Number(req.body.deliveryFee);
+    if (isNaN(deliveryFee) || deliveryFee < 20 || deliveryFee > 60) {
+    return res.status(400).json({
+        message: "Invalid delivery fee"
+    });
+}
     
     for(const item of cart.items){
         orderItems.push({
@@ -32,6 +38,8 @@ async function placeOrder(req,res) {
         totalAmount+=item.food.price * item.quantity;
     }
 
+    totalAmount += deliveryFee;
+    totalAmount = Number(totalAmount.toFixed(2));
     const deliveryAddress =
     req.body.deliveryAddress?.trim() || user.address;
 
@@ -52,6 +60,54 @@ async function placeOrder(req,res) {
 
 
 }
+
+async function getCheckout(req, res) {
+    try {
+
+        const user = req.user;
+
+        const cart = await cartModel
+            .findOne({
+                user: user._id
+            })
+            .populate("items.food", "_id name price");
+
+        if (!cart) {
+            return res.status(404).json({
+                message: "Cart is empty"
+            });
+        }
+
+        let itemTotal = 0;
+
+        for (const item of cart.items) {
+            itemTotal += item.food.price * item.quantity;
+        }
+
+        const deliveryFee = Number(
+            (Math.random() * (60 - 20) + 20).toFixed(2)
+        );
+
+        const totalAmount = Number(
+            (itemTotal + deliveryFee).toFixed(2)
+        );
+
+        return res.status(200).json({
+            message: "Checkout details fetched successfully",
+            itemTotal,
+            deliveryFee,
+            totalAmount
+        });
+
+    } catch (err) {
+
+        return res.status(500).json({
+            message: err.message
+        });
+
+    }
+}
+
 
 async function getAllOrders(req,res){
     const user=req.user;
@@ -240,5 +296,6 @@ module.exports={
     getAllOrders,
     getOrder,
     getRestaurantOrders,
-    updateRestaurantStatus
+    updateRestaurantStatus,
+    getCheckout
 }

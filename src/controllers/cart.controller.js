@@ -29,7 +29,7 @@ async function addToCart(req,res) {
     });
 
 if (!cart) {
-    const newCart = await cartModel.create({
+    let newCart = await cartModel.create({
         user: user._id,
         restaurant: food.restaurant,
         items: [
@@ -39,6 +39,11 @@ if (!cart) {
             }
         ]
     });
+
+    await newCart.populate(
+    "items.food",
+    "_id name price image category restaurant"
+);
 
     return res.status(201).json({
         message: "Cart created successfully",
@@ -68,6 +73,11 @@ if(existingItem){
 }
 await cart.save();
 
+await cart.populate(
+    "items.food",
+    "_id name price image category restaurant"
+);
+
 return res.status(200).json({
     message:"Cart updated successfully",
     cart
@@ -83,7 +93,10 @@ async function getCart(req,res){
     const user=req.user;
     const cart=await cartModel.findOne({
         user:user._id
-    }).populate("items.food", "_id name price image category");
+    }).populate(
+    "items.food",
+    "_id name price image category restaurant"
+);
 
     if(!cart){
         return res.status(200).json({
@@ -134,6 +147,10 @@ if (isNaN(quantity) || quantity < 1) {
 
 
     existingItem.quantity=quantity;
+    await cart.populate(
+    "items.food",
+    "_id name price image category restaurant"
+);
     await cart.save();
 
     return res.status(200).json({
@@ -177,7 +194,7 @@ async function removeItem(req,res) {
 
     cart.items.splice(index,1);
 
-    if(cart.items.lenght===0){
+    if(cart.items.length===0){
         await cart.deleteOne();
 
         return res.status(200).json({
@@ -188,6 +205,11 @@ async function removeItem(req,res) {
 
 
     await cart.save();
+
+    await cart.populate(
+    "items.food",
+    "_id name price image category restaurant"
+);
 
     return res.status(200).json({
         message:"Food removed successfully",
