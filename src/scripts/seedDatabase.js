@@ -6,6 +6,65 @@ const connectToDB = require("../config/database"); // <-- change if your db.js p
 const userModel = require("../models/user.model");
 const restaurantModel = require("../models/restaurant.model");
 const foodModel = require("../models/food.model");
+const FALLBACK_IMAGES = {
+    Pizza: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80",
+    Burger: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80",
+    Coffee: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80",
+    Sides: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=800&q=80",
+    Dessert: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80",
+    Bread: "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&w=800&q=80",
+    default: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80"
+};
+
+function normalizeImageUrl(url) {
+    if (!url) return null;
+
+    const separator = url.includes("?") ? "&" : "?";
+
+    return `${url}${separator}auto=format&fit=crop&w=800&q=80`;
+}
+
+async function getWorkingImage(url, category) {
+
+    const candidate = normalizeImageUrl(url);
+
+    const fallback =
+        FALLBACK_IMAGES[category] ||
+        FALLBACK_IMAGES.default;
+
+    try {
+
+        const response = await fetch(candidate, {
+            method: "GET",
+            headers: {
+                Range: "bytes=0-0"
+            }
+        });
+
+        const type =
+            response.headers.get("content-type") || "";
+
+        if (response.body) {
+            response.body.cancel();
+        }
+
+        if (
+            response.ok &&
+            type.startsWith("image/")
+        ) {
+            return candidate;
+        }
+
+    } catch (error) {
+        // Use fallback
+    }
+
+    console.log(
+        `⚠️ Image unavailable: ${url} → using fallback`
+    );
+
+    return fallback;
+}
 
 const restaurantsData = [
 {
@@ -30,7 +89,7 @@ const restaurantsData = [
     address: "Rajouri Garden, New Delhi",
     description: "Hot pizzas delivered fast.",
     categories: ["Pizza","Fast Food"],
-    image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200&q=80",
+    image: "https://media.istockphoto.com/id/1442417585/photo/person-getting-a-piece-of-cheesy-pepperoni-pizza.jpg?s=612x612&w=0&k=20&c=k60TjxKIOIxJpd4F4yLMVjsniB4W1BpEV4Mi_nb4uJU=",
     openingTime: "10:00",
     closingTime: "23:30",
     deliveryTime: 22,
@@ -217,7 +276,219 @@ const restaurantsData = [
     closingTime:"23:00",
     deliveryTime:40,
     rating:4.8
+},
+
+{
+    name:"The Good Bowl",
+    ownerName:"Arjun Malhotra",
+    email:"owner@goodbowl-demo.com",
+    phone:"9876543231",
+    address:"Vasant Vihar, New Delhi",
+    description:"Comfort bowls made fresh.",
+    categories:["Bowls","Healthy"],
+    image:"https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80",
+    openingTime:"11:00",
+    closingTime:"23:00",
+    deliveryTime:28,
+    rating:4.4
+},
+{
+    name:"Faasos",
+    ownerName:"Nikhil Sethi",
+    email:"owner@faasos-demo.com",
+    phone:"9876543232",
+    address:"Gurugram Sector 29",
+    description:"Wraps, rolls and quick bites.",
+    categories:["Wraps","Fast Food"],
+    image:"https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=1200&q=80",
+    openingTime:"11:00",
+    closingTime:"23:30",
+    deliveryTime:25,
+    rating:4.3
+},
+{
+    name:"Behrouz Biryani",
+    ownerName:"Aditya Rao",
+    email:"owner@behrouz-demo.com",
+    phone:"9876543233",
+    address:"Greater Kailash, Delhi",
+    description:"Royal biryani and kebabs.",
+    categories:["Biryani","Mughlai"],
+    image:"https://images.unsplash.com/photo-1563379091339-03246963d96c?auto=format&fit=crop&w=1200&q=80",
+    openingTime:"11:00",
+    closingTime:"23:30",
+    deliveryTime:35,
+    rating:4.6
+},
+{
+    name:"Oven Story Pizza",
+    ownerName:"Varun Mehta",
+    email:"owner@ovenstory-demo.com",
+    phone:"9876543234",
+    address:"Noida Sector 62",
+    description:"Loaded pizzas and sides.",
+    categories:["Pizza","Fast Food"],
+    image:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=1200&q=80",
+    openingTime:"11:00",
+    closingTime:"23:30",
+    deliveryTime:27,
+    rating:4.4
+},
+{
+    name:"EatFit",
+    ownerName:"Simran Kaur",
+    email:"owner@eatfit-demo.com",
+    phone:"9876543235",
+    address:"South Extension, Delhi",
+    description:"Healthy meals without compromise.",
+    categories:["Healthy","Indian"],
+    image:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=80",
+    openingTime:"08:00",
+    closingTime:"22:00",
+    deliveryTime:25,
+    rating:4.5
+},
+{
+    name:"FreshMenu",
+    ownerName:"Ishita Jain",
+    email:"owner@freshmenu-demo.com",
+    phone:"9876543236",
+    address:"Indiranagar, Bengaluru",
+    description:"Fresh global comfort food.",
+    categories:["Continental","Healthy"],
+    image:"https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1200&q=80",
+    openingTime:"10:00",
+    closingTime:"23:00",
+    deliveryTime:30,
+    rating:4.3
+},
+{
+    name:"Chaayos",
+    ownerName:"Meera Kapoor",
+    email:"owner@chaayos-demo.com",
+    phone:"9876543237",
+    address:"Rajouri Garden, Delhi",
+    description:"Chai, snacks and conversations.",
+    categories:["Cafe","Indian"],
+    image:"https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=1200&q=80",
+    openingTime:"08:00",
+    closingTime:"23:00",
+    deliveryTime:20,
+    rating:4.5
+},
+{
+    name:"Dunkin'",
+    ownerName:"Rohan Bhatia",
+    email:"owner@dunkin-demo.com",
+    phone:"9876543238",
+    address:"Connaught Place, Delhi",
+    description:"Coffee, donuts and sandwiches.",
+    categories:["Cafe","Dessert"],
+    image:"https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=1200&q=80",
+    openingTime:"08:00",
+    closingTime:"22:00",
+    deliveryTime:18,
+    rating:4.4
+},
+{
+    name:"Krispy Kreme",
+    ownerName:"Ayesha Khan",
+    email:"owner@krispykreme-demo.com",
+    phone:"9876543239",
+    address:"Cyber Hub, Gurugram",
+    description:"Fresh glazed donuts.",
+    categories:["Dessert","Cafe"],
+    image:"https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=1200&q=80",
+    openingTime:"09:00",
+    closingTime:"22:00",
+    deliveryTime:17,
+    rating:4.6
+},
+{
+    name:"Carl's Jr.",
+    ownerName:"Manav Arora",
+    email:"owner@carlsjr-demo.com",
+    phone:"9876543240",
+    address:"Saket, New Delhi",
+    description:"Big burgers and loaded fries.",
+    categories:["Burger","Fast Food"],
+    image:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1200&q=80",
+    openingTime:"11:00",
+    closingTime:"23:00",
+    deliveryTime:26,
+    rating:4.2
+},
+{
+    name:"Chili's",
+    ownerName:"Kabir Singh",
+    email:"owner@chilis-demo.com",
+    phone:"9876543241",
+    address:"Select Citywalk, Delhi",
+    description:"American grills and Tex-Mex.",
+    categories:["American","Mexican"],
+    image:"https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80",
+    openingTime:"12:00",
+    closingTime:"23:00",
+    deliveryTime:35,
+    rating:4.4
+},
+{
+    name:"Mamagoto",
+    ownerName:"Tanya Roy",
+    email:"owner@mamagoto-demo.com",
+    phone:"9876543242",
+    address:"Hauz Khas, Delhi",
+    description:"Pan-Asian comfort food.",
+    categories:["Asian","Chinese"],
+    image:"https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=1200&q=80",
+    openingTime:"12:00",
+    closingTime:"23:00",
+    deliveryTime:32,
+    rating:4.5
+},
+{
+    name:"Social",
+    ownerName:"Rishabh Jain",
+    email:"owner@social-demo.com",
+    phone:"9876543243",
+    address:"Hauz Khas Village, Delhi",
+    description:"Modern Indian food and cafe favourites.",
+    categories:["Indian","Cafe"],
+    image:"https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1200&q=80",
+    openingTime:"11:00",
+    closingTime:"23:30",
+    deliveryTime:34,
+    rating:4.5
+},
+{
+    name:"Nando's",
+    ownerName:"Yash Malhotra",
+    email:"owner@nandos-demo.com",
+    phone:"9876543244",
+    address:"Vasant Kunj, Delhi",
+    description:"Flame-grilled peri peri chicken.",
+    categories:["Chicken","Grill"],
+    image:"https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=1200&q=80",
+    openingTime:"11:00",
+    closingTime:"23:00",
+    deliveryTime:30,
+    rating:4.6
+},
+{
+    name:"Naturals Ice Cream",
+    ownerName:"Pooja Sharma",
+    email:"owner@naturals-demo.com",
+    phone:"9876543245",
+    address:"Greater Kailash, Delhi",
+    description:"Fresh fruit ice creams.",
+    categories:["Dessert","Ice Cream"],
+    image:"https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=1200&q=80",
+    openingTime:"11:00",
+    closingTime:"23:00",
+    deliveryTime:20,
+    rating:4.7
 }
+
 ];
 
 const foodData = {
@@ -339,6 +610,126 @@ const foodData = {
     { name: "Seekh Kebab", description: "Juicy kebab", price: 379, category: "BBQ", image: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd" },
     { name: "Butter Naan", description: "Fresh naan", price: 60, category: "Bread", image: "https://images.unsplash.com/photo-1601050690597-df0568f70950" },
     { name: "Kulfi", description: "Indian dessert", price: 99, category: "Dessert", image: "https://images.unsplash.com/photo-1563805042-7684c019e1cb" }
+],
+
+"The Good Bowl": [
+    { name:"Paneer Rice Bowl", description:"Creamy paneer with fragrant rice", price:249, category:"Bowls", image:"https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chicken Rice Bowl", description:"Grilled chicken with seasoned rice", price:299, category:"Bowls", image:"https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=800&q=80" },
+    { name:"Veggie Bowl", description:"Fresh vegetables with wholesome grains", price:219, category:"Healthy", image:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chocolate Brownie", description:"Rich chocolate brownie", price:129, category:"Dessert", image:"https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80" },
+    { name:"Fresh Lemonade", description:"Chilled homemade lemonade", price:99, category:"Beverage", image:"https://images.unsplash.com/photo-1523677011781-c91d1bbe2f9e?auto=format&fit=crop&w=800&q=80" }
+],
+
+"Faasos": [
+    { name:"Paneer Wrap", description:"Spiced paneer with fresh vegetables", price:199, category:"Wraps", image:"https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chicken Wrap", description:"Tender chicken with creamy sauce", price:249, category:"Wraps", image:"https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=800&q=80" },
+    { name:"Veg Roll", description:"Loaded vegetable roll", price:179, category:"Rolls", image:"https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=800&q=80" },
+    { name:"Loaded Fries", description:"Crispy fries with seasoning", price:149, category:"Sides", image:"https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chocolate Brownie", description:"Rich chocolate brownie", price:129, category:"Dessert", image:"https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80" }
+],
+
+"Behrouz Biryani": [
+    { name:"Chicken Dum Biryani", description:"Royal slow-cooked chicken biryani", price:349, category:"Biryani", image:"https://images.unsplash.com/photo-1563379091339-03246963d96c?auto=format&fit=crop&w=800&q=80" },
+    { name:"Veg Biryani", description:"Fragrant vegetable biryani", price:269, category:"Biryani", image:"https://images.unsplash.com/photo-1599043513900-ed6fe01d3833?auto=format&fit=crop&w=800&q=80" },
+    { name:"Paneer Kebab", description:"Smoky grilled paneer", price:229, category:"Kebab", image:"https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=800&q=80" },
+    { name:"Butter Naan", description:"Soft naan with butter", price:60, category:"Bread", image:"https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80" },
+    { name:"Gulab Jamun", description:"Warm Indian sweet", price:90, category:"Dessert", image:"https://images.unsplash.com/photo-1605197161470-5f08d89d5c6d?auto=format&fit=crop&w=800&q=80" }
+],
+
+"Oven Story Pizza": [
+    { name:"Farmhouse Pizza", description:"Loaded with fresh vegetables", price:399, category:"Pizza", image:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80" },
+    { name:"Paneer Tikka Pizza", description:"Paneer tikka with cheesy crust", price:429, category:"Pizza", image:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80" },
+    { name:"Pepperoni Pizza", description:"Classic pepperoni and cheese", price:449, category:"Pizza", image:"https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80" },
+    { name:"Garlic Bread", description:"Cheesy garlic bread", price:179, category:"Sides", image:"https://images.unsplash.com/photo-1608198093002-ad4e005484ec?auto=format&fit=crop&w=800&q=80" },
+    { name:"Choco Lava Cake", description:"Molten chocolate cake", price:129, category:"Dessert", image:"https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80" }
+],
+
+"EatFit": [
+    { name:"Paneer Power Bowl", description:"Protein-rich paneer and grains", price:269, category:"Healthy", image:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chicken Protein Bowl", description:"Grilled chicken with fresh greens", price:299, category:"Healthy", image:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80" },
+    { name:"Veggie Salad", description:"Fresh seasonal vegetables", price:199, category:"Salad", image:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80" },
+    { name:"Grilled Sandwich", description:"Toasted sandwich with fresh filling", price:179, category:"Sandwich", image:"https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=800&q=80" },
+    { name:"Fresh Lemonade", description:"Chilled homemade lemonade", price:99, category:"Beverage", image:"https://images.unsplash.com/photo-1523677011781-c91d1bbe2f9e?auto=format&fit=crop&w=800&q=80" }
+],
+
+"FreshMenu": [
+    { name:"Asian Rice Bowl", description:"Fragrant rice with vegetables", price:249, category:"Asian", image:"https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=800&q=80" },
+    { name:"Grilled Chicken", description:"Herb grilled chicken with greens", price:299, category:"Continental", image:"https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=800&q=80" },
+    { name:"Pasta Alfredo", description:"Creamy white sauce pasta", price:279, category:"Continental", image:"https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80" },
+    { name:"Grilled Sandwich", description:"Toasted sandwich with fresh filling", price:179, category:"Sandwich", image:"https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chocolate Brownie", description:"Rich chocolate brownie", price:129, category:"Dessert", image:"https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80" }
+],
+
+"Chaayos": [
+    { name:"Masala Chai", description:"Classic Indian spiced tea", price:99, category:"Tea", image:"https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=800&q=80" },
+    { name:"Paneer Sandwich", description:"Grilled paneer sandwich", price:189, category:"Sandwich", image:"https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=800&q=80" },
+    { name:"Samosa", description:"Crispy potato-filled samosa", price:79, category:"Snacks", image:"https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chole Kulche", description:"Spiced chickpeas with soft kulcha", price:169, category:"Indian", image:"https://images.unsplash.com/photo-1626132647523-66b46f1b9c8d?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chocolate Brownie", description:"Rich chocolate brownie", price:129, category:"Dessert", image:"https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80" }
+],
+
+"Dunkin'": [
+    { name:"Glazed Donut", description:"Classic sugar glazed donut", price:99, category:"Donut", image:"https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chocolate Donut", description:"Chocolate glazed donut", price:119, category:"Donut", image:"https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=800&q=80" },
+    { name:"Cappuccino", description:"Freshly brewed coffee", price:199, category:"Coffee", image:"https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chicken Sandwich", description:"Grilled chicken sandwich", price:229, category:"Sandwich", image:"https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=800&q=80" },
+    { name:"Fresh Lemonade", description:"Chilled homemade lemonade", price:99, category:"Beverage", image:"https://images.unsplash.com/photo-1523677011781-c91d1bbe2f9e?auto=format&fit=crop&w=800&q=80" }
+],
+
+"Krispy Kreme": [
+    { name:"Original Glazed", description:"Signature glazed donut", price:109, category:"Donut", image:"https://images.unsplash.com/photo-1551024506-0bccd828d307?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chocolate Dream", description:"Chocolate topped donut", price:129, category:"Donut", image:"https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=800&q=80" },
+    { name:"Strawberry Donut", description:"Strawberry glazed donut", price:139, category:"Donut", image:"https://images.unsplash.com/photo-1551024601-bec78aea704b?auto=format&fit=crop&w=800&q=80" },
+    { name:"Cold Coffee", description:"Chilled creamy coffee", price:189, category:"Beverage", image:"https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chocolate Brownie", description:"Rich chocolate brownie", price:129, category:"Dessert", image:"https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80" }
+],
+
+"Carl's Jr.": [
+    { name:"Classic Beef Burger", description:"Juicy grilled beef burger", price:299, category:"Burger", image:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80" },
+    { name:"Veg Burger", description:"Crispy veggie patty burger", price:219, category:"Burger", image:"https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=800&q=80" },
+    { name:"Loaded Fries", description:"Crispy fries with toppings", price:169, category:"Sides", image:"https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chicken Burger", description:"Crispy chicken burger", price:249, category:"Burger", image:"https://images.unsplash.com/photo-1598182198871-d3f4ab4fd181?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chocolate Shake", description:"Thick chocolate shake", price:199, category:"Beverage", image:"https://images.unsplash.com/photo-1572490122747-3968b75cc699?auto=format&fit=crop&w=800&q=80" }
+],
+
+"Chili's": [
+    { name:"Tex-Mex Burger", description:"Loaded burger with Tex-Mex toppings", price:349, category:"Burger", image:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chicken Fajitas", description:"Sizzling grilled chicken and peppers", price:399, category:"Mexican", image:"https://images.unsplash.com/photo-1599974579688-8dbdd335c77f?auto=format&fit=crop&w=800&q=80" },
+    { name:"Loaded Nachos", description:"Crispy nachos with cheese", price:249, category:"Sides", image:"https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?auto=format&fit=crop&w=800&q=80" },
+    { name:"Grilled Chicken", description:"Juicy herb grilled chicken", price:329, category:"Grill", image:"https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chocolate Brownie", description:"Warm chocolate brownie", price:159, category:"Dessert", image:"https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80" }
+],
+
+"Mamagoto": [
+    { name:"Hakka Noodles", description:"Wok-tossed noodles with vegetables", price:249, category:"Chinese", image:"https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=800&q=80" },
+    { name:"Thai Curry", description:"Creamy Thai curry with vegetables", price:299, category:"Asian", image:"https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?auto=format&fit=crop&w=800&q=80" },
+    { name:"Dimsums", description:"Steamed Asian dumplings", price:219, category:"Asian", image:"https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=800&q=80" },
+    { name:"Fried Rice", description:"Wok-fried rice with vegetables", price:229, category:"Chinese", image:"https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chocolate Brownie", description:"Rich chocolate brownie", price:129, category:"Dessert", image:"https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80" }
+],
+
+"Social": [
+    { name:"Butter Chicken", description:"Creamy North Indian classic", price:329, category:"Indian", image:"https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&w=800&q=80" },
+    { name:"Paneer Tikka", description:"Char-grilled paneer cubes", price:279, category:"Indian", image:"https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w=800&q=80" },
+    { name:"Loaded Nachos", description:"Nachos with cheese and salsa", price:249, category:"Sides", image:"https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?auto=format&fit=crop&w=800&q=80" },
+    { name:"Classic Burger", description:"Juicy burger with fresh vegetables", price:249, category:"Burger", image:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chocolate Brownie", description:"Warm chocolate brownie", price:159, category:"Dessert", image:"https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80" }
+],
+
+"Nando's": [
+    { name:"Peri Peri Chicken", description:"Flame-grilled chicken with peri peri sauce", price:349, category:"Chicken", image:"https://images.unsplash.com/photo-1532550907401-a500c9a57435?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chicken Burger", description:"Grilled peri peri chicken burger", price:299, category:"Burger", image:"https://images.unsplash.com/photo-1598182198871-d3f4ab4fd181?auto=format&fit=crop&w=800&q=80" },
+    { name:"Peri Peri Fries", description:"Crispy fries with peri peri seasoning", price:159, category:"Sides", image:"https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=800&q=80" },
+    { name:"Grilled Corn", description:"Charred corn with spices", price:129, category:"Sides", image:"https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=800&q=80" },
+    { name:"Fresh Lemonade", description:"Chilled homemade lemonade", price:99, category:"Beverage", image:"https://images.unsplash.com/photo-1523677011781-c91d1bbe2f9e?auto=format&fit=crop&w=800&q=80" }
+],
+
+"Naturals Ice Cream": [
+    { name:"Tender Coconut", description:"Creamy tender coconut ice cream", price:149, category:"Ice Cream", image:"https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=800&q=80" },
+    { name:"Mango Ice Cream", description:"Fresh mango ice cream", price:149, category:"Ice Cream", image:"https://images.unsplash.com/photo-1570197788417-0e82375c9371?auto=format&fit=crop&w=800&q=80" },
+    { name:"Chocolate Ice Cream", description:"Rich chocolate ice cream", price:149, category:"Ice Cream", image:"https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=800&q=80" },
+    { name:"Strawberry Ice Cream", description:"Fresh strawberry ice cream", price:149, category:"Ice Cream", image:"https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?auto=format&fit=crop&w=800&q=80" },
+    { name:"Brownie Sundae", description:"Ice cream with chocolate brownie", price:199, category:"Dessert", image:"https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&w=800&q=80" }
 ]
 };
 
@@ -373,7 +764,12 @@ async function seedDatabase(){
             address:data.address,
             phone:data.phone,
 
-            images:[data.image],
+            images:[
+            await getWorkingImage(
+              data.image,
+                data.categories?.[0]
+             )
+],
 
             openingTime:data.openingTime,
             closingTime:data.closingTime,
@@ -384,24 +780,37 @@ async function seedDatabase(){
 
             rating:data.rating,
 
-            isOpen:true
+            
         });
 
-        const foods = foodData[data.name];
+  const foods = foodData[data.name];
 
-        if (foods) {
-         const formattedFoods = foods.map(food => ({
-        ...food,
-        restaurant: restaurant._id
-        }));
+if (foods) {
+
+    const formattedFoods = [];
+
+    for (const food of foods) {
+
+        const workingImage = await getWorkingImage(
+            food.image,
+            food.category
+        );
+
+        formattedFoods.push({
+            ...food,
+            image: workingImage,
+            restaurant: restaurant._id
+        });
+    }
 
     await foodModel.insertMany(formattedFoods);
+
 }
 
         console.log(`✔ ${data.name} Created`);
     }
 
-    console.log("\n🎉 15 Restaurants & Owners Seeded Successfully!");
+    console.log("\n🎉 30 Restaurants & 150 Food Items Seeded Successfully!");
 
     process.exit();
 
