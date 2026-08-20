@@ -72,7 +72,7 @@ async function getCheckout(req, res) {
             })
             .populate("items.food", "_id name price");
 
-        if (!cart) {
+        if (!cart || cart.items.length === 0) {
             return res.status(404).json({
                 message: "Cart is empty"
             });
@@ -84,6 +84,7 @@ async function getCheckout(req, res) {
             itemTotal += item.food.price * item.quantity;
         }
 
+        // Random delivery fee between ₹20 and ₹60
         const deliveryFee = Number(
             (Math.random() * (60 - 20) + 20).toFixed(2)
         );

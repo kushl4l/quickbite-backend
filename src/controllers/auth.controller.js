@@ -94,9 +94,19 @@ async function logIn(req,res){
 
 }
 
+async function getMe(req, res) {
+    return res.status(200).json({
+        user: req.user
+    });
+}
+
+
+
 module.exports={
     signUp,
-    logIn
+    logIn,
+    getMe
+    
 }
 
 
